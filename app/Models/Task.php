@@ -15,6 +15,7 @@ class Task extends Model
         'priority',
         'due_date',
         'completed',
+        'user_id',
     ];
 
     protected $table = 'tasks';
