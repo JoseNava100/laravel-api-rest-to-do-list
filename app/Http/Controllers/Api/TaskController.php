@@ -106,8 +106,8 @@ class TaskController extends Controller {
         }
     }
 
-    public function show(string $id)
-    {
+    public function show(string $id) {
+        
         $task = Task::find($id);
 
         if (!$task) {
@@ -133,6 +133,22 @@ class TaskController extends Controller {
     }
 
     public function update(Request $request, string $id) {
+
+        if (!Auth::check()) {
+
+            $message = [
+                'message' => 'User not authenticated',
+                'status' => 401,
+            ];
+
+            return response()->json($message, 401);
+        }
+
+        if ($request->has('completed')) {
+            $request->merge([
+                'completed' => filter_var($request->completed, FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
 
         $task = Task::find($id);
 
