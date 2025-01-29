@@ -12,9 +12,9 @@ class TaskController extends Controller {
 
     public function index() {
 
-        $tasks = Task::all();
+        $task = Task::all();
 
-        if ($tasks->isEmpty()) {
+        if ($task->isEmpty()) {
 
             $message = [
                 'message' => 'No tasks found',
@@ -27,7 +27,7 @@ class TaskController extends Controller {
 
             $message = [
                 'message' => 'All tasks',
-                'data' => $tasks,
+                'data' => $task,
                 'status' => 200,
             ];
 
@@ -103,6 +103,113 @@ class TaskController extends Controller {
 
             return response()->json($message, 200);
             
+        }
+    }
+
+    public function show(string $id)
+    {
+        $task = Task::find($id);
+
+        if (!$task) {
+            
+            $message = [
+                'message' => 'Task not found',
+                'status' => 401,
+            ];
+
+            return response()->json($message, 404);
+
+        } else {
+
+            $message = [
+                'message' => 'Task found',
+                'data' => $task,
+                'status' => 201,
+            ];
+            
+            return response()->json($message, 201);
+
+        }
+    }
+
+    public function update(Request $request, string $id) {
+
+        $task = Task::find($id);
+
+        if (!$task) {
+            
+            $message = [
+                'message' => 'Task not found',
+                'status' => 401,
+            ];
+
+            return response()->json($message, 401);
+
+        } else {
+
+            $validation = Validator::make($request->all(), [
+                'title' => 'nullable|string',
+                'description' => 'nullable|string',
+                'priority' => 'nullable',
+                'due_date' => 'nullable|date',
+                'completed' => 'nullable|boolean',
+            ]);
+
+            if ($validation->fails()) {
+                
+                $message = [
+                    'message' => 'Error in data validations',
+                    'errors' => $validation->errors(),
+                    'status' => 406,
+                ];
+
+                return response()->json($message, 406);
+
+            } else {
+
+                $task->fill($request->only([
+                    'title',
+                    'description',
+                    'priority',
+                    'due_date',
+                    'completed',
+                ]))->save();
+    
+                $message = [
+                    'message' => 'Update task',
+                    'character' => $task,
+                    'status' => 200
+                ];
+    
+                 return response()->json($message, 200);
+
+            }
+        }
+    }
+
+    public function destroy(string $id)
+    {
+        $task = Task::find($id);
+
+        if (!$task) {
+            
+            $message = [
+                'message' => 'Task not found',
+                'status' => 401
+            ];
+
+            return response()->json($message, 401);
+
+        } else {
+            
+            $task->delete();
+
+            $message = [
+                'message' => 'Delete car',
+                'status' => 201
+            ];
+
+            return response()->json($message, 201);
         }
     }
 }
