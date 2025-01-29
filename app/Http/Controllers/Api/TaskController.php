@@ -8,23 +8,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class TaskController extends Controller {
+class TaskController extends Controller
+{
 
-    public function index() {
-        
+    public function index()
+    {
+
         $userId = auth()->id();
 
         $tasks = Task::where('user_id', $userId)->get();
 
         if ($tasks->isEmpty()) {
-            
+
             $message = [
                 'message' => 'No tasks found',
-                'status' => 404, 
+                'status' => 404,
             ];
 
             return response()->json($message, 404);
-
         } else {
 
             $message = [
@@ -37,7 +38,8 @@ class TaskController extends Controller {
         }
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
 
         if (!Auth::check()) {
 
@@ -94,7 +96,6 @@ class TaskController extends Controller {
             ];
 
             return response()->json($message, 401);
-
         } else {
 
             $message = [
@@ -104,15 +105,15 @@ class TaskController extends Controller {
             ];
 
             return response()->json($message, 200);
-            
         }
     }
 
-    public function show(string $id) {
-    
+    public function show(string $id)
+    {
+
         $task = Task::where('id', $id)
-                    ->where('user_id', Auth::id()) 
-                    ->first();
+            ->where('user_id', Auth::id())
+            ->first();
 
         if (!$task) {
 
@@ -122,7 +123,6 @@ class TaskController extends Controller {
             ];
 
             return response()->json($message, 404);
-
         } else {
 
             $message = [
@@ -135,8 +135,9 @@ class TaskController extends Controller {
         }
     }
 
-    public function update(Request $request, string $id) {
-        
+    public function update(Request $request, string $id)
+    {
+
         if (!Auth::check()) {
 
             $message = [
@@ -148,8 +149,8 @@ class TaskController extends Controller {
         }
 
         $task = Task::where('id', $id)
-                    ->where('user_id', Auth::id())
-                    ->first();
+            ->where('user_id', Auth::id())
+            ->first();
 
         if (!$task) {
 
@@ -206,20 +207,19 @@ class TaskController extends Controller {
     public function destroy(string $id)
     {
         $task = Task::where('id', $id)
-                ->where('user_id', Auth::id()) 
-                ->first();
+            ->where('user_id', Auth::id())
+            ->first();
 
         if (!$task) {
-            
+
             $message = [
                 'message' => 'Task not found or not authorized',
                 'status' => 404
             ];
 
             return response()->json($message, 404);
-
         } else {
-            
+
             $task->delete();
 
             $message = [

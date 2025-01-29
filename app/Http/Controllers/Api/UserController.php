@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -59,9 +61,43 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request)
     {
-        //
+        $user = auth()->user();
+
+        $validation = Validator::make($request->all(), [
+            'name' => 'sometimes|string',
+            'username' => 'sometimes|string|unique:users,username,' . $user->id,
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'password' => 'sometimes|string|min:8|confirmed',
+        ]);
+
+        if ($validation->fails()) {
+
+            $message = [
+                'message' => 'Validation error',
+                'errors' => $validation->errors(),
+                'status' => 422,
+            ];
+
+            return response()->json($message, 422);
+        }
+
+        $data = $request->only(['name', 'username', 'email']);
+
+        if ($request->has('password')) {
+            $data['password'] = bcrypt($request->password);
+        }
+
+        $user->update($data);
+
+        $message = [
+            'message' => 'User updated successfully',
+            'data' => $user,
+            'status' => 200,
+        ];
+
+        return response()->json($message, 200);
     }
 
     /**

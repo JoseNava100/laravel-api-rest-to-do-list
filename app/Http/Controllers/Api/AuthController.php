@@ -10,17 +10,18 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function register (Request $request) {
+    public function register(Request $request)
+    {
 
         $validation = Validator::make($request->all(), [
             'name' => 'required|string',
             'username' => 'required|string|unique:users',
             'email' => 'required|email|string|unique:users',
             'password' => 'required|string|min:8|confirmed',
-        ]); 
+        ]);
 
         if ($validation->fails()) {
-            
+
             $message = [
                 'message' => 'Error in data validations',
                 'errors' => $validation->errors(),
@@ -28,9 +29,8 @@ class AuthController extends Controller
             ];
 
             return response()->json($message, 400);
-
         } else {
-            
+
             $user = User::create([
                 'name' => $request->name,
                 'username' => $request->username,
@@ -52,10 +52,10 @@ class AuthController extends Controller
 
             return response()->json($message, 201);
         }
-        
     }
 
-    public function login (Request $request) {
+    public function login(Request $request)
+    {
 
         $request->validate([
             'email' => 'required|email',
@@ -66,7 +66,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => $request->password,
         ])) {
-            
+
             $user = Auth::user();
 
             $response = [
@@ -80,22 +80,21 @@ class AuthController extends Controller
                 'data' => $response,
                 'status' => 201,
             ];
-    
-            return response()->json($message, 201);
 
+            return response()->json($message, 201);
         } else {
-            
+
             $message = [
-                'message' => 'Authentication error',    
+                'message' => 'Authentication error',
                 'status' => 400,
             ];
-    
-            return response()->json($message, 400);
 
+            return response()->json($message, 400);
         }
     }
 
-    public function logout (Request $request) {
+    public function logout(Request $request)
+    {
 
         $user = Auth::user();
 
