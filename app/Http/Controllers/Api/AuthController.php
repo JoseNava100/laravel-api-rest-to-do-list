@@ -38,7 +38,7 @@ class AuthController extends Controller
             ]);
 
             $response = [
-                'token' => $user->createToken('')->plainTextToken,
+                'token' => $user->createToken('Register_Token:')->plainTextToken,
                 'username' => $user->username,
                 'email' => $user->email,
             ];
