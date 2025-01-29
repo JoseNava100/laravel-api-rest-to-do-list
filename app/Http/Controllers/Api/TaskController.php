@@ -11,23 +11,25 @@ use Illuminate\Support\Facades\Validator;
 class TaskController extends Controller {
 
     public function index() {
+        
+        $userId = auth()->id();
 
-        $task = Task::all();
+        $tasks = Task::where('user_id', $userId)->get();
 
-        if ($task->isEmpty()) {
-
+        if ($tasks->isEmpty()) {
+            
             $message = [
                 'message' => 'No tasks found',
-                'status' => 401,
+                'status' => 404, 
             ];
 
-            return response()->json($message, 401);
+            return response()->json($message, 404);
 
         } else {
 
             $message = [
-                'message' => 'All tasks',
-                'data' => $task,
+                'message' => 'Tasks for the authenticated user',
+                'data' => $tasks,
                 'status' => 200,
             ];
 
@@ -107,14 +109,16 @@ class TaskController extends Controller {
     }
 
     public function show(string $id) {
-        
-        $task = Task::find($id);
+    
+        $task = Task::where('id', $id)
+                    ->where('user_id', Auth::id()) 
+                    ->first();
 
         if (!$task) {
-            
+
             $message = [
-                'message' => 'Task not found',
-                'status' => 401,
+                'message' => 'Task not found or not authorized',
+                'status' => 404,
             ];
 
             return response()->json($message, 404);
@@ -124,16 +128,15 @@ class TaskController extends Controller {
             $message = [
                 'message' => 'Task found',
                 'data' => $task,
-                'status' => 201,
+                'status' => 200,
             ];
-            
-            return response()->json($message, 201);
 
+            return response()->json($message, 200);
         }
     }
 
     public function update(Request $request, string $id) {
-
+        
         if (!Auth::check()) {
 
             $message = [
@@ -144,88 +147,87 @@ class TaskController extends Controller {
             return response()->json($message, 401);
         }
 
+        $task = Task::where('id', $id)
+                    ->where('user_id', Auth::id())
+                    ->first();
+
+        if (!$task) {
+
+            $message = [
+                'message' => 'Task not found or not authorized',
+                'status' => 404,
+            ];
+
+            return response()->json($message, 404);
+        }
+
         if ($request->has('completed')) {
             $request->merge([
                 'completed' => filter_var($request->completed, FILTER_VALIDATE_BOOLEAN),
             ]);
         }
 
-        $task = Task::find($id);
+        $validation = Validator::make($request->all(), [
+            'title' => 'nullable|string',
+            'description' => 'nullable|string',
+            'priority' => 'nullable|in:low,medium,high',
+            'due_date' => 'nullable|date',
+            'completed' => 'nullable|boolean',
+        ]);
 
-        if (!$task) {
-            
+        if ($validation->fails()) {
+
             $message = [
-                'message' => 'Task not found',
+                'message' => 'Error in data validation',
+                'error' => $validation->errors(),
                 'status' => 401,
             ];
 
             return response()->json($message, 401);
-
-        } else {
-
-            $validation = Validator::make($request->all(), [
-                'title' => 'nullable|string',
-                'description' => 'nullable|string',
-                'priority' => 'nullable',
-                'due_date' => 'nullable|date',
-                'completed' => 'nullable|boolean',
-            ]);
-
-            if ($validation->fails()) {
-                
-                $message = [
-                    'message' => 'Error in data validations',
-                    'errors' => $validation->errors(),
-                    'status' => 406,
-                ];
-
-                return response()->json($message, 406);
-
-            } else {
-
-                $task->fill($request->only([
-                    'title',
-                    'description',
-                    'priority',
-                    'due_date',
-                    'completed',
-                ]))->save();
-    
-                $message = [
-                    'message' => 'Update task',
-                    'character' => $task,
-                    'status' => 200
-                ];
-    
-                 return response()->json($message, 200);
-
-            }
         }
+
+        $task->update($request->only([
+            'title',
+            'description',
+            'priority',
+            'due_date',
+            'completed',
+        ]));
+
+        $message = [
+            'message' => 'Task updated',
+            'data' => $task,
+            'status' => 200,
+        ];
+
+        return response()->json($message, 200);
     }
 
     public function destroy(string $id)
     {
-        $task = Task::find($id);
+        $task = Task::where('id', $id)
+                ->where('user_id', Auth::id()) 
+                ->first();
 
         if (!$task) {
             
             $message = [
-                'message' => 'Task not found',
-                'status' => 401
+                'message' => 'Task not found or not authorized',
+                'status' => 404
             ];
 
-            return response()->json($message, 401);
+            return response()->json($message, 404);
 
         } else {
             
             $task->delete();
 
             $message = [
-                'message' => 'Delete car',
-                'status' => 201
+                'message' => 'Task deleted successfully',
+                'status' => 200
             ];
 
-            return response()->json($message, 201);
+            return response()->json($message, 200);
         }
     }
 }
