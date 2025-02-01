@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -15,7 +16,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $user = User::find(auth()->id());
+        $user = auth()->user();
 
         $message = [
             'message' => 'User found',
@@ -65,6 +66,17 @@ class UserController extends Controller
     {
         $user = auth()->user();
 
+        // Validar la contraseña actual
+        if (!Hash::check($request->current_password, $user->password)) {
+
+            $message = [
+                'message' => 'The password now is incorrect',
+                'status' => 422,
+            ];
+
+            return response()->json($message, 422);
+        }
+
         $validation = Validator::make($request->all(), [
             'name' => 'sometimes|string',
             'username' => 'sometimes|string|unique:users,username,' . $user->id,
@@ -91,13 +103,11 @@ class UserController extends Controller
 
         $user->update($data);
 
-        $message = [
-            'message' => 'User updated successfully',
+        return response()->json([
+            'message' => 'Profile updated successfully',
             'data' => $user,
             'status' => 200,
-        ];
-
-        return response()->json($message, 200);
+        ], 200);
     }
 
     /**
